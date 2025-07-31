@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if sh -c ": >/dev/tty" >/dev/null 2>/dev/null; then
+    echo "TTY is available"
+    docker compose exec node "$@"
+else
+    echo "TTY is not available"
+    docker compose exec -T node "$@"
+fi
+

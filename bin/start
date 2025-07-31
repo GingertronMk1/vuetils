@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+docker compose up -d \
+    && ./bin/exec npm install \
+    && ./bin/exec npm run dev

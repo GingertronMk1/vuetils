@@ -1,0 +1,18 @@
+services:
+  node:
+    platform: linux/x86_64
+    image: node:22-bookworm
+    working_dir: /srv
+    volumes:
+      - "./:/srv"
+    command: tail -f /dev/null
+    ports:
+      - "80:80"
+      - "23456:23456"
+      - "4000:4000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
