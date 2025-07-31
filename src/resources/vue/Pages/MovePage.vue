@@ -110,8 +110,7 @@ addKeyframe();
             step="0.1" />
         </label>
       </div>
-      <section>
-
+      <section class="flex flex-col">
         <fieldset class="flex flex-col">
           <label
             v-for="key in keyframes.keys()"
@@ -126,6 +125,7 @@ addKeyframe();
             />
           </label>
         </fieldset>
+        {{ selectedKeyFrame.time }}
         <button @click="addKeyframe">Add Keyframe</button>
       </section>
     </section>
