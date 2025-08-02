@@ -2,6 +2,7 @@
 
 import { computed, ref } from 'vue'
 import ContainerComponent from '@/resources/vue/Components/ContainerComponent.vue'
+import ButtonComponent from '@/resources/vue/Components/ButtonComponent.vue'
 
 const players = ref<Record<string, number>>({
   leftWing: 1,
@@ -45,27 +46,55 @@ const getPlayerY = (index: string) => selectedKeyFrame.value.players[index][1]
 
 addKeyframe();
 
+function startDrag(evt: DragEvent, itemId: string) {
+  if (itemId !== selectedPlayer.value) {
+    evt.preventDefault();
+    return;
+  }
+  evt.dataTransfer.effectAllowed = 'move';
+  evt.dataTransfer.dropEffect = 'move';
+  evt.dataTransfer?.setData('number', evt.pageX);
+}
+
+function onDrop(evt: DragEvent) {
+  const targetWidth = evt.target.clientWidth;
+  const targetHeight = evt.target.clientHeight;
+  const newX = evt.offsetX / targetWidth * 100;
+  const newY = 100 - (evt.offsetY / targetHeight * 100);
+  console.table({newX, newY})
+  selectedKeyFrame.value.players[selectedPlayer.value] = [
+    Math.ceil(newX),
+    Math.ceil(newY),
+  ];
+}
+
 </script>
 
 <template>
   <ContainerComponent>
     <h1 class="text-3xl">Move</h1>
 
-    <div class="w-full relative aspect-3/2">
+    <div
+      class="w-full relative aspect-3/2 bg-green-400"
+      @dragover="e => e.preventDefault()"
+      @drop.prevent="e => onDrop(e)"
+    >
       <div
         v-for="(number, index) in players"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center"
+        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-sm"
         :class="{
-          'bg-blue-500': selectedPlayer === index && !playing,
-          'bg-green-500': selectedPlayer !== index,
+          'bg-red-400': selectedPlayer === index && !playing,
+          'bg-red-500': selectedPlayer !== index,
           'transition-all': playing
         }"
         :style="{
           left: `calc(${getPlayerX(index)}% - 1rem)`,
           bottom: `calc(${getPlayerY(index)}% - 1rem)`,
         }"
+        draggable="true"
         @click="selectedPlayer = index"
+        @dragstart="e => startDrag(e, index)"
         v-text="number"/>
     </div>
     <section class="flex flex-row gap-x-4">
@@ -126,7 +155,7 @@ addKeyframe();
           </label>
         </fieldset>
         {{ selectedKeyFrame.time }}
-        <button @click="addKeyframe">Add Keyframe</button>
+        <ButtonComponent @click="addKeyframe">Add Keyframe</ButtonComponent>
       </section>
     </section>
   </ContainerComponent>
