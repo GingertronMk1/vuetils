@@ -7,33 +7,70 @@ import ButtonComponent from '@/resources/vue/Components/ButtonComponent.vue'
 const keyFrameLength = ref<number>(1000);
 const currentTime = ref<number>(0);
 
-const players = ref<Record<string, number>>({
-  leftWing: 1,
-  rightWing: 1,
-  leftLink: 2,
-  rightLink: 2,
-  leftMid: 3,
-  rightMid: 3,
+type PlayerList = Record<string, number>;
+
+type ObjectList = Record<string, object>;
+
+type Positions = 'attack' | 'defense' | 'objects';
+
+type PositionList<TPlayer, TObject> = {
+  attack: TPlayer;
+  defense: TPlayer;
+  objects: TObject;
+}
+
+const players = ref<PositionList<PlayerList, ObjectList>>({
+  attack: {
+    leftWing: 1,
+    rightWing: 1,
+    leftLink: 2,
+    rightLink: 2,
+    leftMid: 3,
+    rightMid: 3,
+  },
+  defense: {
+    leftWing: 1,
+    rightWing: 1,
+    leftLink: 2,
+    rightLink: 2,
+    leftMid: 3,
+    rightMid: 3,
+  },
+  objects: {}
 });
+
+type PlayerLocation = [number, number];
+type PlayerLocationList = Record<string, PlayerLocation>;
 
 type Keyframe = {
   time: number;
-  players: Record<string, [number, number]>;
+  players: PositionList<PlayerLocationList, PlayerLocationList>;
 }
 
 const keyframes = ref<Keyframe[]>([{
   players: {
-    leftWing: [25, 40],
-    leftLink: [35, 40],
-    leftMid: [45, 40],
-    rightMid: [55, 40],
-    rightLink: [65, 40],
-    rightWing: [75, 40],
+    attack: {
+      leftWing: [25, 40],
+      leftLink: [35, 40],
+      leftMid: [45, 40],
+      rightMid: [55, 40],
+      rightLink: [65, 40],
+      rightWing: [75, 40],
+    },
+    defense: {
+      leftWing: [25, 60],
+      leftLink: [35, 60],
+      leftMid: [45, 60],
+      rightMid: [55, 60],
+      rightLink: [65, 60],
+      rightWing: [75, 60],
+    },
+    objects: {}
   },
   time: 0,
 }])
 
-const selectedPlayer = ref<string>(Object.keys(players.value)[0]);
+const selectedPlayer = ref<[Positions, string]>(['attack', Object.keys(players.value['attack'])[0]]);
 const playing = ref<boolean>(false);
 const keyFrameSelection = ref<number>(0)
 
@@ -44,13 +81,16 @@ function addKeyframe(): void {
   keyframes.value.push(JSON.parse(JSON.stringify(keyframes.value[lastKeyFrame.length - 1])));
 }
 
-const getPlayerX = (index: string) => selectedKeyFrame.value.players[index][0]
-const getPlayerY = (index: string) => selectedKeyFrame.value.players[index][1]
+const getPlayerX = (positionGroup: Positions, index: string): number =>
+  selectedKeyFrame.value.players[positionGroup][index][0]
+const getPlayerY = (positionGroup: Positions, index: string): number =>
+  selectedKeyFrame.value.players[positionGroup][index][1]
 
 addKeyframe();
 
-function startDrag(evt: DragEvent, itemId: string) {
-  if (itemId !== selectedPlayer.value) {
+function startDrag(evt: DragEvent, itemPosition: Positions, itemId: string) {
+  const [selectedPosition, selectedId] = selectedPlayer.value;
+  if (itemPosition !== selectedPosition || itemId !== selectedId) {
     evt.preventDefault();
     return;
   }
@@ -71,7 +111,8 @@ function onDrop(evt: DragEvent) {
   const newX = evt.offsetX / targetWidth * 100;
   const newY = 100 - (evt.offsetY / targetHeight * 100);
   console.table({newX, newY})
-  selectedKeyFrame.value.players[selectedPlayer.value] = [
+  const [selectedPosition, selectedPlayerId] = selectedPlayer.value;
+  selectedKeyFrame.value.players[selectedPosition][selectedPlayerId] = [
     Math.ceil(newX),
     Math.ceil(newY),
   ];
@@ -119,16 +160,15 @@ function togglePlayback(): void {
       @drop.prevent="e => onDrop(e)"
     >
       <div
-        v-for="(number, index) in players"
+        v-for="(number, index) in players.attack"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
+        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2 bg-red-500"
         :class="{
-          'bg-red-400': selectedPlayer === index && !playing,
-          'bg-red-500': playing || selectedPlayer !== index,
+          'bg-red-400': selectedPlayer[0] === 'attack' && selectedPlayer[1] === index && !playing,
         }"
         :style="{
-          left: `calc(${getPlayerX(index)}% - 1rem)`,
-          bottom: `calc(${getPlayerY(index)}% - 1rem)`,
+          left: `calc(${getPlayerX('attack', index)}% - 1rem)`,
+          bottom: `calc(${getPlayerY('attack', index)}% - 1rem)`,
           ...(playing && keyFrameSelection > 0) ? {
             'transition-property': 'all',
             'transition-duration': `${keyFrameLength}ms`,
@@ -136,20 +176,20 @@ function togglePlayback(): void {
           } : []
         }"
         draggable="true"
-        @click="selectedPlayer = index"
-        @dragstart="e => startDrag(e, index)"
+        @click="selectedPlayer = ['attack', index]"
+        @dragstart="e => startDrag(e, 'attack', index)"
         v-text="number"
       />
     </div>
     <section class="flex flex-row gap-x-4 *:flex *:flex-col">
 
       <div class="max-w-32 [&>label]:flex [&>label]:flex-col">
-        <span v-text="selectedPlayer" />
+        <span v-text="selectedPlayer.join(', ')" />
         <label for="y">
           <span>
             y: <input
               id="yNumber"
-              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
+              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer[0]][selectedPlayer[1]][1]"
               type="number"
               name="yNumber"
               min="0"
@@ -158,7 +198,7 @@ function togglePlayback(): void {
           </span>
           <input
             id="y"
-            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
+            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer[0]][selectedPlayer[1]][1]"
             style="writing-mode: vertical-rl"
             class="rotate-180"
             type="range"
@@ -169,7 +209,7 @@ function togglePlayback(): void {
           <span>
             x: <input
               id="xNumber"
-              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][0]"
+              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer[0]][selectedPlayer[1]][0]"
               type="number"
               name="xNumber"
               min="0"
@@ -178,7 +218,7 @@ function togglePlayback(): void {
           </span>
           <input
             id="x"
-            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][0]"
+            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer[0]][selectedPlayer[1]][0]"
             type="range"
             name="x"
             step="1"/>
