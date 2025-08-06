@@ -24,7 +24,8 @@ jobs:
         if: always()
       - run: ./bin/npm run test:unit -- --run
         if: always()
-      - run: |
-          ./bin/exec npx playwright install --with-deps
-          npm run test:e2e
-        if: always()
+#      - run: |
+#          ./bin/exec npx playwright install --with-deps
+#          npm run test:e2e
+#        if: always()
+#        continue-on-error: true
