@@ -181,6 +181,7 @@ function togglePlayback(): void {
 const dataJSON = computed({
   get() {
     return JSON.stringify({
+      keyframeLength: keyFrameLength.value,
       players: players.value,
       keyframes: keyframes.value
     }, null, 4);
@@ -188,18 +189,21 @@ const dataJSON = computed({
   set(newValue: string) {
     const originalPlayers = players.value;
     const originalKeyframes = keyframes.value;
+    const originalKeyframeLength = keyFrameLength.value;
     try {
       const parsedJSON = JSON.parse(newValue);
       players.value = parsedJSON.players;
       keyframes.value = parsedJSON.keyframes;
+      keyFrameLength.value = parsedJSON.keyframeLength;
     } catch (e) {
       console.info('error reading JSON', e);
       players.value = originalPlayers;
       keyframes.value = originalKeyframes;
+      keyFrameLength.value = originalKeyframeLength;
     }
   }
 });
-const showJSON = ref<boolean>(false);
+const showJSON = ref<boolean>(true);
 
 </script>
 
