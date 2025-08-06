@@ -17,5 +17,5 @@ jobs:
         with:
           path: ./node_modules
           key: ${{ hashFiles('package-lock.json') }}
-      - run: ./bin/start
+      - run: ./bin/install
       - run: ./bin/npm run lint:check
