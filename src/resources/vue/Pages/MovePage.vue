@@ -145,6 +145,26 @@ function togglePlayback(): void {
 
       <div class="max-w-32 [&>label]:flex [&>label]:flex-col ">
         <span v-text="selectedPlayer" />
+        <label for="y">
+          <span>
+            y: <input
+              id="yNumber"
+              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
+              type="number"
+              name="yNumber"
+              min="0"
+              max="100"
+              step="1" />
+          </span>
+          <input
+            id="y"
+            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
+            style="writing-mode: vertical-rl"
+            class="rotate-180"
+            type="range"
+            name="y"
+            step="1" />
+        </label>
         <label for="x">
           <span>
             x: <input
@@ -162,24 +182,6 @@ function togglePlayback(): void {
             type="range"
             name="x"
             step="1"/>
-        </label>
-        <label for="y">
-          <span>
-            y: <input
-              id="yNumber"
-              v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
-              type="number"
-              name="yNumber"
-              min="0"
-              max="100"
-              step="1" />
-          </span>
-          <input
-            id="y"
-            v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
-            type="range"
-            name="y"
-            step="1" />
         </label>
       </div>
       <section>
