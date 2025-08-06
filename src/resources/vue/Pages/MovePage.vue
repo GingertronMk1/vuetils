@@ -121,18 +121,25 @@ function startDrag(evt: DragEvent, itemPosition: Teams, itemId: string) {
   }
   evt.dataTransfer.effectAllowed = 'move';
   evt.dataTransfer.dropEffect = 'move';
+  evt.dataTransfer.setDragImage(document.createElement('span'), 0, 0);
 }
 
-function onDrop(evt: DragEvent) {
+function onDragOver(evt: DragEvent) {
   if (evt.target === null) {
     return;
   }
-  const target = evt.target as HTMLDivElement;
-  const targetWidth = target.clientWidth;
-  const targetHeight = target.clientHeight;
-  const newX = evt.offsetX / targetWidth * 100;
-  const newY = 100 - (evt.offsetY / targetHeight * 100);
-  console.table({newX, newY})
+  const { clientWidth, clientHeight, id } = evt.target as HTMLDivElement;
+  if (id !== 'field') {
+    return;
+  }
+  evt.preventDefault();
+  evt.stopPropagation();
+  const { offsetX, offsetY } = evt;
+  const targetWidth = clientWidth;
+  const targetHeight = clientHeight;
+  const newX = offsetX / targetWidth * 100;
+  const newY = 100 - (offsetY / targetHeight * 100);
+  console.table({clientWidth, clientHeight, offsetX, offsetY})
   const [selectedPosition, selectedPlayerId] = selectedPlayer.value;
   selectedKeyFrame.value.players[selectedPosition][selectedPlayerId] = [
     Math.ceil(newX),
@@ -178,9 +185,9 @@ function togglePlayback(): void {
     <h1 class="text-3xl">Move</h1>
 
     <div
+      id="field"
       class="w-full relative aspect-3/2 bg-green-400 *:absolute *:cursor-pointer "
-      @dragover="e => e.preventDefault()"
-      @drop.prevent="e => onDrop(e)"
+      @dragover="e => onDragOver(e)"
     >
       <PlayerComponent
         v-for="(number, index) in players.attack"

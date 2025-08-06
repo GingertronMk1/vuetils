@@ -4,8 +4,8 @@ defineProps<{
   shouldBeAnimated: boolean,
   animationLength: number,
   colourClass: string,
-  xPercent: number,
-  yPercent: number,
+  xPercent: number|string,
+  yPercent: number|string,
 }>();
 </script>
 
