@@ -3,16 +3,22 @@
 import { computed, ref, watch } from 'vue'
 import ContainerComponent from '@/resources/vue/Components/ContainerComponent.vue'
 import ButtonComponent from '@/resources/vue/Components/ButtonComponent.vue'
+import PlayerComponent from '@/resources/vue/Components/Pages/Move/PlayerComponent.vue'
 
 const keyFrameLength = ref<number>(1000);
 const currentTime = ref<number>(0);
 
 type PlayerList = Record<string, number>;
 
-type ObjectList = Record<string, object>;
+type ObjectList = Record<string, {
+  classes: string | string[],
+  selectedColour: string,
+  nonSelectedColour: string,
+}>;
 
 type Teams = 'attack' | 'defense' | 'objects';
 
+const playing = ref<boolean>(false);
 type PositionList<TPlayer, TObject> = {
   attack: TPlayer;
   defense: TPlayer;
@@ -36,14 +42,28 @@ const players = ref<PositionList<PlayerList, ObjectList>>({
     leftMid: 3,
     rightMid: 3,
   },
-  objects: {}
+  objects: {
+    ball: {
+      classes: [
+        'bg-white',
+        'w-[0.8rem]',
+        'h-[1rem]',
+        'rounded-3xl',
+        'flex',
+        'flex-row',
+        'items-center',
+        'justify-center',
+      ],
+      selectedColour: '#808080',
+      nonSelectedColour: 'white',
+    }
+  }
 });
 
 type PlayerLocation = [number, number];
 type PlayerLocationList = Record<string, PlayerLocation>;
 
 type Keyframe = {
-  time: number;
   players: PositionList<PlayerLocationList, PlayerLocationList>;
 }
 
@@ -65,13 +85,13 @@ const keyframes = ref<Keyframe[]>([{
       rightLink: [65, 60],
       rightWing: [75, 60],
     },
-    objects: {}
+    objects: {
+      ball: [50, 50]
+    }
   },
-  time: 0,
 }])
 
 const selectedPlayer = ref<[Teams, string]>(['attack', Object.keys(players.value['attack'])[0]]);
-const playing = ref<boolean>(false);
 const keyFrameSelection = ref<number>(0)
 
 const selectedKeyFrame = computed<Keyframe>(() => keyframes.value[keyFrameSelection.value]);
@@ -156,37 +176,45 @@ function togglePlayback(): void {
     <h1 class="text-3xl">Move</h1>
 
     <div
-      class="w-full relative aspect-3/2 bg-green-400"
+      class="w-full relative aspect-3/2 bg-green-400 *:absolute *:cursor-pointer "
       @dragover="e => e.preventDefault()"
       @drop.prevent="e => onDrop(e)"
     >
-      <div
+      <PlayerComponent
         v-for="(number, index) in players.attack"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
-        :class="selectedPlayer[0] === 'attack' && selectedPlayer[1] === index && !playing ? 'bg-red-400' : 'bg-red-500'"
-        :style="{
-          left: `calc(${getPlayerX('attack', index)}% - 1rem)`,
-          bottom: `calc(${getPlayerY('attack', index)}% - 1rem)`,
-          ...(playing && keyFrameSelection > 0) ? {
-            'transition-property': 'all',
-            'transition-duration': `${keyFrameLength}ms`,
-            'transition-timing-function': 'linear',
-          } : []
-        }"
-        draggable="true"
+        :colour-class="selectedPlayer[0] === 'attack' && selectedPlayer[1] === index && !playing ? 'bg-red-200' : 'bg-red-500'"
+        :x-percent="getPlayerX('attack', index)"
+        :y-percent="getPlayerY('attack', index)"
+        :number="number"
+        :should-be-animated="playing && keyFrameSelection > 0"
+        :animation-length="keyFrameLength"
         @click="selectedPlayer = ['attack', index]"
         @dragstart="e => startDrag(e, 'attack', index)"
-        v-text="number"
       />
-      <div
+      <PlayerComponent
         v-for="(number, index) in players.defense"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
-        :class="selectedPlayer[0] === 'defense' && selectedPlayer[1] === index && !playing ? 'bg-blue-400' : 'bg-blue-500'"
+        :colour-class="selectedPlayer[0] === 'defense' && selectedPlayer[1] === index && !playing ? 'bg-blue-200' : 'bg-blue-500'"
+        :x-percent="getPlayerX('defense', index)"
+        :y-percent="getPlayerY('defense', index)"
+        :number="number"
+        :should-be-animated="playing && keyFrameSelection > 0"
+        :animation-length="keyFrameLength"
+        @click="selectedPlayer = ['defense', index]"
+        @dragstart="e => startDrag(e, 'defense', index)"
+      />
+      <div
+        v-for="(object, index) in players.objects"
+        :key="index"
+        class="border-gray-700 border-2"
+        :class="[
+          object.classes,
+        ]"
         :style="{
-          left: `calc(${getPlayerX('defense', index)}% - 1rem)`,
-          bottom: `calc(${getPlayerY('defense', index)}% - 1rem)`,
+          left: `calc(${getPlayerX('objects', index)}% - 1rem)`,
+          bottom: `calc(${getPlayerY('objects', index)}% - 1rem)`,
+          backgroundColor: selectedPlayer[0] === 'objects' && selectedPlayer[1] === index && !playing ? object.selectedColour : object.nonSelectedColour,
           ...(playing && keyFrameSelection > 0) ? {
             'transition-property': 'all',
             'transition-duration': `${keyFrameLength}ms`,
@@ -194,9 +222,8 @@ function togglePlayback(): void {
           } : []
         }"
         draggable="true"
-        @click="selectedPlayer = ['defense', index]"
-        @dragstart="e => startDrag(e, 'defense', index)"
-        v-text="number"
+        @click="selectedPlayer = ['objects', index]"
+        @dragstart="e => startDrag(e, 'objects', index)"
       />
     </div>
     <section class="flex flex-row gap-x-4 *:flex *:flex-col *:gap-4">
@@ -266,10 +293,11 @@ function togglePlayback(): void {
       </section>
       <section>
         <label for="keyframeLength">
-          Keyframe Length
+          Keyframe Length (ms)
           <input
             id="keyframeLength"
             v-model="keyFrameLength"
+            class="ms-4"
             type="number"
             name="keyframeLength"
             step="50">
