@@ -178,10 +178,27 @@ function togglePlayback(): void {
   }
 }
 
-const dataJSON = computed(() => ({
-  players,
-  keyframes
-}));
+const dataJSON = computed({
+  get() {
+    return JSON.stringify({
+      players: players.value,
+      keyframes: keyframes.value
+    }, null, 4);
+  },
+  set(newValue: string) {
+    const originalPlayers = players.value;
+    const originalKeyframes = keyframes.value;
+    try {
+      const parsedJSON = JSON.parse(newValue);
+      players.value = parsedJSON.players;
+      keyframes.value = parsedJSON.keyframes;
+    } catch (e) {
+      console.info('error reading JSON', e);
+      players.value = originalPlayers;
+      keyframes.value = originalKeyframes;
+    }
+  }
+});
 const showJSON = ref<boolean>(false);
 
 </script>
@@ -332,11 +349,10 @@ const showJSON = ref<boolean>(false);
       <textarea
         v-show="showJSON"
         id="json"
+        v-model="dataJSON"
         name="json"
         cols="30"
-        rows="10"
-        readonly
-        v-text="dataJSON" />
+        rows="10" />
     </section>
   </ContainerComponent>
 </template>
