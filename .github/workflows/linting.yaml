@@ -1,0 +1,31 @@
+name: Testing
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v4
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('package-lock.json') }}
+      - run: ./bin/install
+      - run: ./bin/npm run build
+        if: always()
+      - run: ./bin/npm run lint:check
+        if: always()
+      - run: ./bin/npm run test:unit -- --run
+        if: always()
+#      - run: |
+#          ./bin/exec npx playwright install --with-deps
+#          npm run test:e2e
+#        if: always()
+#        continue-on-error: true

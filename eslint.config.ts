@@ -19,10 +19,6 @@ export default defineConfigWithVueTs(
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
-  pluginVue.configs['flat/recommended'],
-  vueTsConfigs.eslintRecommended,
-  eslintConfigPrettier,
-
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
@@ -32,27 +28,35 @@ export default defineConfigWithVueTs(
     ...pluginPlaywright.configs['flat/recommended'],
     files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
   },
-  skipFormatting,
+
+  pluginVue.configs['flat/recommended'],
+  vueTsConfigs.eslintRecommended,
+  eslintConfigPrettier,
+
   {
     rules: {
-      "vue/max-attributes-per-line":
-      [
-        "error", {
-        "singleline": {
-          "max": 1
+      'vue/max-attributes-per-line': [
+        'error',
+        {
+          singleline: {
+            max: 1,
+          },
+          multiline: {
+            max: 1,
+          },
         },
-        "multiline": {
-          "max": 1
-        }
-      }],
-  "vue/html-indent": ["error", 2, {
-  "attribute": 1,
-  "baseIndent": 1,
-  "closeBracket": 0,
-  "alignAttributesVertically": true,
-  "ignores": []
-}]
-
-    }
-  }
+      ],
+      'vue/html-indent': [
+        'error',
+        2,
+        {
+          attribute: 1,
+          baseIndent: 1,
+          closeBracket: 0,
+          alignAttributesVertically: true,
+          ignores: [],
+        },
+      ],
+    },
+  },
 )
