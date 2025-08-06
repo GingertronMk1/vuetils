@@ -1,8 +1,11 @@
 <script setup lang="ts">
 
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ContainerComponent from '@/resources/vue/Components/ContainerComponent.vue'
 import ButtonComponent from '@/resources/vue/Components/ButtonComponent.vue'
+
+const keyFrameLength = ref<number>(1000);
+const currentTime = ref<number>(0);
 
 const players = ref<Record<string, number>>({
   leftWing: 1,
@@ -51,14 +54,20 @@ function startDrag(evt: DragEvent, itemId: string) {
     evt.preventDefault();
     return;
   }
+  if (!evt.dataTransfer) {
+    return;
+  }
   evt.dataTransfer.effectAllowed = 'move';
   evt.dataTransfer.dropEffect = 'move';
-  evt.dataTransfer?.setData('number', evt.pageX);
 }
 
 function onDrop(evt: DragEvent) {
-  const targetWidth = evt.target.clientWidth;
-  const targetHeight = evt.target.clientHeight;
+  if (evt.target === null) {
+    return;
+  }
+  const target = evt.target as HTMLDivElement;
+  const targetWidth = target.clientWidth;
+  const targetHeight = target.clientHeight;
   const newX = evt.offsetX / targetWidth * 100;
   const newY = 100 - (evt.offsetY / targetHeight * 100);
   console.table({newX, newY})
@@ -68,10 +77,40 @@ function onDrop(evt: DragEvent) {
   ];
 }
 
+watch(
+  keyFrameSelection,
+  function (newValue) {
+  currentTime.value = Number(newValue) * keyFrameLength.value;
+});
+
+let interval: number | null = null;
+let lastFrame: boolean = false;
+function togglePlayback(): void {
+  if (interval === null) {
+    keyFrameSelection.value = 0;
+    playing.value = true;
+    interval = setInterval(function () {
+      if (keyFrameSelection.value >= keyframes.value.length - 1 && !lastFrame) {
+        lastFrame = true;
+      } else if (lastFrame) {
+        keyFrameSelection.value = 0;
+        lastFrame = false;
+      } else {
+        keyFrameSelection.value++
+      }
+    }, keyFrameLength.value)
+  } else {
+    clearInterval(interval);
+    playing.value = false;
+    interval = null;
+    keyFrameSelection.value = 0;
+  }
+}
+
 </script>
 
 <template>
-  <ContainerComponent>
+  <ContainerComponent class="space-y-4">
     <h1 class="text-3xl">Move</h1>
 
     <div
@@ -85,22 +124,26 @@ function onDrop(evt: DragEvent) {
         class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-sm"
         :class="{
           'bg-red-400': selectedPlayer === index && !playing,
-          'bg-red-500': selectedPlayer !== index,
-          'transition-all': playing
+          'bg-red-500': playing || selectedPlayer !== index,
         }"
         :style="{
           left: `calc(${getPlayerX(index)}% - 1rem)`,
           bottom: `calc(${getPlayerY(index)}% - 1rem)`,
+          ...(playing && keyFrameSelection > 0) ? {
+            'transition-property': 'all',
+            'transition-duration': `${keyFrameLength}ms`,
+            'transition-timing-function': 'linear',
+          } : []
         }"
         draggable="true"
         @click="selectedPlayer = index"
         @dragstart="e => startDrag(e, index)"
-        v-text="number"/>
+        v-text="number"
+      />
     </div>
-    <section class="flex flex-row gap-x-4">
+    <section class="flex flex-row gap-x-4 *:flex *:flex-col">
 
-      <div class="flex flex-col max-w-32 [&>label]:flex [&>label]:flex-col ">
-
+      <div class="max-w-32 [&>label]:flex [&>label]:flex-col ">
         <span v-text="selectedPlayer" />
         <label for="x">
           <span>
@@ -139,8 +182,9 @@ function onDrop(evt: DragEvent) {
             step="0.1" />
         </label>
       </div>
-      <section class="flex flex-col">
-        <fieldset class="flex flex-col">
+      <section>
+        <fieldset class="flex flex-col gap-2">
+          <h3 class="text-xl">Keyframe Select</h3>
           <label
             v-for="key in keyframes.keys()"
             :key="key"
@@ -153,9 +197,13 @@ function onDrop(evt: DragEvent) {
               type="radio"
             />
           </label>
+          <span v-text="keyFrameSelection" />
+          <span v-text="currentTime" />
         </fieldset>
-        {{ selectedKeyFrame.time }}
         <ButtonComponent @click="addKeyframe">Add Keyframe</ButtonComponent>
+      </section>
+      <section>
+        <ButtonComponent @click="togglePlayback">{{ playing ? 'Pause' : 'Play' }}</ButtonComponent>
       </section>
     </section>
   </ContainerComponent>
