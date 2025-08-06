@@ -121,7 +121,7 @@ function togglePlayback(): void {
       <div
         v-for="(number, index) in players"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-sm"
+        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
         :class="{
           'bg-red-400': selectedPlayer === index && !playing,
           'bg-red-500': playing || selectedPlayer !== index,
