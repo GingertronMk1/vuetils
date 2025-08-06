@@ -12,11 +12,13 @@ type PlayerList = Record<string, number>;
 
 type ObjectList = Record<string, {
   classes: string | string[],
-  selectedColour: string,
-  nonSelectedColour: string,
+  selectedColour: `#${string}`,
+  nonSelectedColour: `${string}`,
 }>;
 
-type Teams = 'attack' | 'defense' | 'objects';
+type Teams = 'attack'
+           | 'defense'
+           | 'objects';
 
 const playing = ref<boolean>(false);
 type PositionList<TPlayer, TObject> = {
@@ -55,7 +57,7 @@ const players = ref<PositionList<PlayerList, ObjectList>>({
         'justify-center',
       ],
       selectedColour: '#808080',
-      nonSelectedColour: 'white',
+      nonSelectedColour: '#ffffff',
     }
   }
 });
@@ -227,7 +229,6 @@ function togglePlayback(): void {
       />
     </div>
     <section class="flex flex-row gap-x-4 *:flex *:flex-col *:gap-4">
-
       <div class="max-w-32 [&>label]:flex [&>label]:flex-col">
         <span v-text="selectedPlayer.join(', ')" />
         <label for="y">
