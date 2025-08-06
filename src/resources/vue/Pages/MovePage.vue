@@ -154,14 +154,14 @@ function togglePlayback(): void {
               name="xNumber"
               min="0"
               max="100"
-              step="0.1" />
+              step="1" />
           </span>
           <input
             id="x"
             v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][0]"
             type="range"
             name="x"
-            step="0.1"/>
+            step="1"/>
         </label>
         <label for="y">
           <span>
@@ -172,14 +172,14 @@ function togglePlayback(): void {
               name="yNumber"
               min="0"
               max="100"
-              step="0.1" />
+              step="1" />
           </span>
           <input
             id="y"
             v-model="keyframes[keyFrameSelection]['players'][selectedPlayer][1]"
             type="range"
             name="y"
-            step="0.1" />
+            step="1" />
         </label>
       </div>
       <section>
