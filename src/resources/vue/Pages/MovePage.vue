@@ -143,7 +143,7 @@ function togglePlayback(): void {
     </div>
     <section class="flex flex-row gap-x-4 *:flex *:flex-col">
 
-      <div class="max-w-32 [&>label]:flex [&>label]:flex-col ">
+      <div class="max-w-32 [&>label]:flex [&>label]:flex-col">
         <span v-text="selectedPlayer" />
         <label for="y">
           <span>
@@ -184,24 +184,26 @@ function togglePlayback(): void {
             step="1"/>
         </label>
       </div>
-      <section>
-        <fieldset class="flex flex-col gap-2">
-          <h3 class="text-xl">Keyframe Select</h3>
-          <label
-            v-for="key in keyframes.keys()"
-            :key="key"
-            :for="key.toString()">
-            {{ key }}
-            <input
-              :id="key.toString()"
-              v-model="keyFrameSelection"
-              :value="key"
-              type="radio"
-            />
-          </label>
-          <span v-text="keyFrameSelection" />
-          <span v-text="currentTime" />
-        </fieldset>
+      <section class="space-y-2">
+        <h3 class="text-xl">Keyframe Select</h3>
+        <label
+          v-for="key in keyframes.keys()"
+          :key="key"
+          :for="key.toString()"
+          class="flex flex-row gap-4"
+        >
+          <span v-text="key" />
+          <input
+            :id="key.toString()"
+            v-model="keyFrameSelection"
+            :value="key"
+            type="radio"
+          />
+          <span
+            class="cursor-pointer"
+            @click="keyframes.splice(key, 1)"
+          >X</span>
+        </label>
         <ButtonComponent @click="addKeyframe">Add Keyframe</ButtonComponent>
       </section>
       <section>
