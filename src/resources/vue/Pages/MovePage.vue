@@ -178,6 +178,12 @@ function togglePlayback(): void {
   }
 }
 
+const dataJSON = computed(() => ({
+  players,
+  keyframes
+}));
+const showJSON = ref<boolean>(false);
+
 </script>
 
 <template>
@@ -312,6 +318,25 @@ function togglePlayback(): void {
         </label>
         <ButtonComponent @click="togglePlayback">{{ playing ? 'Pause' : 'Play' }}</ButtonComponent>
       </section>
+    </section>
+    <section class="flex flex-col">
+      <label for="showJSON">
+        Show JSON
+        <input
+          id="showJSON"
+          v-model="showJSON"
+          type="checkbox"
+          name="showJSON"
+        />
+      </label>
+      <textarea
+        v-show="showJSON"
+        id="json"
+        name="json"
+        cols="30"
+        rows="10"
+        readonly
+        v-text="dataJSON" />
     </section>
   </ContainerComponent>
 </template>
