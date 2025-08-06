@@ -11,7 +11,7 @@ type PlayerList = Record<string, number>;
 
 type ObjectList = Record<string, object>;
 
-type Positions = 'attack' | 'defense' | 'objects';
+type Teams = 'attack' | 'defense' | 'objects';
 
 type PositionList<TPlayer, TObject> = {
   attack: TPlayer;
@@ -70,7 +70,7 @@ const keyframes = ref<Keyframe[]>([{
   time: 0,
 }])
 
-const selectedPlayer = ref<[Positions, string]>(['attack', Object.keys(players.value['attack'])[0]]);
+const selectedPlayer = ref<[Teams, string]>(['attack', Object.keys(players.value['attack'])[0]]);
 const playing = ref<boolean>(false);
 const keyFrameSelection = ref<number>(0)
 
@@ -81,14 +81,14 @@ function addKeyframe(): void {
   keyframes.value.push(JSON.parse(JSON.stringify(keyframes.value[lastKeyFrame.length - 1])));
 }
 
-const getPlayerX = (positionGroup: Positions, index: string): number =>
+const getPlayerX = (positionGroup: Teams, index: string): number =>
   selectedKeyFrame.value.players[positionGroup][index][0]
-const getPlayerY = (positionGroup: Positions, index: string): number =>
+const getPlayerY = (positionGroup: Teams, index: string): number =>
   selectedKeyFrame.value.players[positionGroup][index][1]
 
 addKeyframe();
 
-function startDrag(evt: DragEvent, itemPosition: Positions, itemId: string) {
+function startDrag(evt: DragEvent, itemPosition: Teams, itemId: string) {
   const [selectedPosition, selectedId] = selectedPlayer.value;
   if (itemPosition !== selectedPosition || itemId !== selectedId) {
     evt.preventDefault();
@@ -144,6 +144,7 @@ function togglePlayback(): void {
     clearInterval(interval);
     playing.value = false;
     interval = null;
+    lastFrame = false;
     keyFrameSelection.value = 0;
   }
 }
@@ -162,10 +163,8 @@ function togglePlayback(): void {
       <div
         v-for="(number, index) in players.attack"
         :key="index"
-        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2 bg-red-500"
-        :class="{
-          'bg-red-400': selectedPlayer[0] === 'attack' && selectedPlayer[1] === index && !playing,
-        }"
+        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
+        :class="selectedPlayer[0] === 'attack' && selectedPlayer[1] === index && !playing ? 'bg-red-400' : 'bg-red-500'"
         :style="{
           left: `calc(${getPlayerX('attack', index)}% - 1rem)`,
           bottom: `calc(${getPlayerY('attack', index)}% - 1rem)`,
@@ -180,8 +179,27 @@ function togglePlayback(): void {
         @dragstart="e => startDrag(e, 'attack', index)"
         v-text="number"
       />
+      <div
+        v-for="(number, index) in players.defense"
+        :key="index"
+        class="absolute cursor-pointer rounded-3xl w-[2rem] h-[2rem] flex flex-row items-center justify-center border-gray-700 border-2"
+        :class="selectedPlayer[0] === 'defense' && selectedPlayer[1] === index && !playing ? 'bg-blue-400' : 'bg-blue-500'"
+        :style="{
+          left: `calc(${getPlayerX('defense', index)}% - 1rem)`,
+          bottom: `calc(${getPlayerY('defense', index)}% - 1rem)`,
+          ...(playing && keyFrameSelection > 0) ? {
+            'transition-property': 'all',
+            'transition-duration': `${keyFrameLength}ms`,
+            'transition-timing-function': 'linear',
+          } : []
+        }"
+        draggable="true"
+        @click="selectedPlayer = ['defense', index]"
+        @dragstart="e => startDrag(e, 'defense', index)"
+        v-text="number"
+      />
     </div>
-    <section class="flex flex-row gap-x-4 *:flex *:flex-col">
+    <section class="flex flex-row gap-x-4 *:flex *:flex-col *:gap-4">
 
       <div class="max-w-32 [&>label]:flex [&>label]:flex-col">
         <span v-text="selectedPlayer.join(', ')" />
@@ -247,6 +265,15 @@ function togglePlayback(): void {
         <ButtonComponent @click="addKeyframe">Add Keyframe</ButtonComponent>
       </section>
       <section>
+        <label for="keyframeLength">
+          Keyframe Length
+          <input
+            id="keyframeLength"
+            v-model="keyFrameLength"
+            type="number"
+            name="keyframeLength"
+            step="50">
+        </label>
         <ButtonComponent @click="togglePlayback">{{ playing ? 'Pause' : 'Play' }}</ButtonComponent>
       </section>
     </section>
