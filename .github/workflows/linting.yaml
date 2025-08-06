@@ -18,4 +18,9 @@ jobs:
           path: ./node_modules
           key: ${{ hashFiles('package-lock.json') }}
       - run: ./bin/install
+      - run: ./bin/npm run build
       - run: ./bin/npm run lint:check
+      - run: ./bin/npm run test:unit -- --run
+      - run: |
+          ./bin/exec npx playwright install --with-deps
+          npm run test:e2e
