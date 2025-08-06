@@ -226,7 +226,7 @@ const showJSON = ref<boolean>(true);
         :should-be-animated="playing && keyFrameSelection > 0"
         :animation-length="keyFrameLength"
         @click="selectedPlayer = ['attack', index]"
-        @dragstart="e => startDrag(e as DragEvent, 'attack', index)"
+        @dragstart="(e: DragEvent) => startDrag(e, 'attack', index)"
       />
       <PlayerComponent
         v-for="(number, index) in players.defense"
@@ -238,7 +238,7 @@ const showJSON = ref<boolean>(true);
         :should-be-animated="playing && keyFrameSelection > 0"
         :animation-length="keyFrameLength"
         @click="selectedPlayer = ['defense', index]"
-        @dragstart="e => startDrag(e as DragEvent, 'defense', index)"
+        @dragstart="(e: DragEvent) => startDrag(e, 'defense', index)"
       />
       <div
         v-for="(object, index) in players.objects"
