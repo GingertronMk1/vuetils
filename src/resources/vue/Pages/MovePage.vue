@@ -200,7 +200,7 @@ function togglePlayback(): void {
             type="radio"
           />
           <span
-            class="cursor-pointer"
+            class="cursor-pointer font-extrabold text-red-700"
             @click="keyframes.splice(key, 1)"
           >X</span>
         </label>
